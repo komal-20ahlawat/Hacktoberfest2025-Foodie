@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Foodie — Responsive Food Delivery</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <meta name="description" content="Foodie - Responsive Food Delivery demo app (HTML/CSS/JS) - Smart cart, checkout validation & order tracking simulation.">
+
+  <style>
+    /* -------------------------
+       Foodie: Single-file CSS
+       ------------------------- */
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#ffb703;
+      --accent-2:#ff6b6b;
+      --glass: rgba(255,255,255,0.03);
+      --success:#2ecc71;
+      --danger:#ff6b6b;
+      --radius:12px;
+      --max-width:1100px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100%;
+      font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: linear-gradient(180deg,#071028 0%, #071028 55%, #041325 100%);
+      color:#e6eef6;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:28px;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:var(--max-width);
+      display:grid;
+      gap:20px;
+      grid-template-columns: 1fr 360px;
+      align-items:start;
+    }
+
+    /* Responsive: single column on small screens */
+    @media (max-width:900px){
+      .wrap{grid-template-columns:1fr}
+    }
+
+    header.site{
+      grid-column: 1 / -1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo{
+      width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff8a00);
+      display:grid;place-items:center;font-weight:700;color:#08101a;font-size:20px;
+      box-shadow:0 6px 20px rgba(255,183,3,0.12), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    .title{font-size:20px;font-weight:700}
+    .subtitle{font-size:13px;color:var(--muted)}
+
+    /* Main cards */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius);
+      padding:18px;
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 8px 30px rgba(2,6,23,0.5);
+    }
+
+    /* menu */
+    .menu-header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;
+    }
+    .search{
+      flex:1;display:flex;gap:8px;align-items:center;
+    }
+    .search input{
+      width:100%;
+      padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);
+      background:var(--glass);color:inherit;outline:none;
+    }
+    .filters{display:flex;gap:8px}
+    .chip{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.02);font-size:13px;cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+    .chip.active{background:linear-gradient(90deg,var(--accent),#ff8a00);color:#08101a;font-weight:600}
+
+    .menu-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+      gap:14px;margin-top:12px;
+    }
+
+    .item{
+      display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .thumb{
+      width:84px;height:84px;border-radius:10px;background:#081827;display:grid;place-items:center;font-size:28px;color:var(--accent);
+      border:1px solid rgba(255,255,255,0.03)
+    }
+    .meta{flex:1}
+    .name{font-weight:700}
+    .desc{font-size:13px;color:var(--muted);margin-top:4px}
+    .price{font-weight:700;margin-top:6px}
+    .addrow{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .btn{padding:8px 12px;border-radius:10px;background:var(--accent);color:#08101a;border:none;cursor:pointer;font-weight:700}
+    .btn.secondary{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.03)}
+    .qty{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.02);padding:6px;border-radius:8px}
+
+    /* right column - cart */
+    .cart{
+      position:sticky;top:28px;
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .cart .title-row{display:flex;align-items:center;justify-content:space-between}
+    .cart-list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto;padding-right:6px}
+    .cart-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02);padding:8px;border-radius:10px}
+    .cart-item .name{font-size:14px}
+    .cart-actions{display:flex;gap:6px;align-items:center;margin-left:auto}
+    .small{font-size:13px;color:var(--muted)}
+
+    .summary{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .summary-row{display:flex;justify-content:space-between;font-weight:600}
+    .checkout-btn{background:linear-gradient(90deg,var(--accent),#ff8a00);border:none;padding:12px;border-radius:12px;cursor:pointer;font-weight:700;color:#08101a}
+
+    /* checkout modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:720px;background:linear-gradient(180deg, #071827, #04121b);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.03)}
+    .two-col{display:grid;grid-template-columns:1fr 320px;gap:12px}
+    @media (max-width:900px){ .two-col{grid-template-columns:1fr} }
+
+    label{display:block;font-size:13px;margin-bottom:6px}
+    input[type="text"], input[type="email"], input[type="tel"], select{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
+      background:transparent;color:inherit;outline:none
+    }
+
+    .order-tracking{display:flex;gap:12px;flex-direction:column}
+    .step{display:flex;gap:12px;align-items:center}
+    .dot{width:14px;height:14px;border-radius:99px;background:rgba(255,255,255,0.06);display:inline-block}
+    .dot.active{background:linear-gradient(90deg,var(--accent),#ff8a00)}
+    .tracking-bar{height:8px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .tracking-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ff6b6b)}
+    .status-text{font-weight:700}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .center{display:grid;place-items:center}
+    .empty{padding:24px;border-radius:10px;background:rgba(255,255,255,0.02);text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+
+  <div class="wrap" role="main">
+    <header class="site">
+      <div class="brand">
+        <div class="logo">F</div>
+        <div>
+          <div class="title">Foodie</div>
+          <div class="subtitle">Hot meals • Fast delivery</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="chip" id="view-orders-btn">My Orders</button>
+        <button class="chip" id="clear-cart-btn">Clear Cart</button>
+      </div>
+    </header>
+
+    <!-- Left: Menu -->
+    <section class="card" aria-labelledby="menu-heading">
+      <div class="menu-header">
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Search food, e.g., pizza, pasta..." aria-label="Search menu" />
+        </div>
+        <div class="filters" role="toolbar" aria-label="Filters">
+          <div class="chip active" data-filter="all">All</div>
+          <div class="chip" data-filter="veg">Veg</div>
+          <div class="chip" data-filter="nonveg">Non-Veg</div>
+          <div class="chip" data-filter="dessert">Dessert</div>
+        </div>
+      </div>
+
+      <div id="menuGrid" class="menu-grid" aria-live="polite"></div>
+    </section>
+
+    <!-- Right: Cart & Checkout -->
+    <aside class="cart card" aria-labelledby="cart-heading">
+      <div class="title-row">
+        <div><strong>Your Cart</strong><div class="small muted">Items saved locally</div></div>
+        <div class="small">🛒 <span id="cartCount">0</span></div>
+      </div>
+
+      <div id="cartList" class="cart-list"></div>
+
+      <div class="summary">
+        <div class="summary-row"><span>Subtotal</span><span id="subtotal">₹0</span></div>
+        <div class="summary-row"><span>Delivery</span><span id="deliveryFee">₹30</span></div>
+        <div class="summary-row"><span>Taxes</span><span id="taxes">₹0</span></div>
+        <div class="summary-row" style="font-size:18px"><span>Total</span><span id="total">₹0</span></div>
+        <button id="checkoutBtn" class="checkout-btn" aria-haspopup="dialog">Checkout</button>
+      </div>
+    </aside>
+
+    <!-- checkout modal / order tracking -->
+    <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-hidden="true">
+      <div class="modal" role="document" aria-modal="true">
+        <div id="modalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------------
+       Foodie - Single-file JavaScript
+       Features implemented:
+       • Menu rendering & filtering
+       • Search
+       • Add to cart / update qty / remove
+       • Cart persisted in localStorage
+       • Checkout modal with form validation
+       • Simulated order creation & real-time tracking
+       ------------------------------- */
+
+    // Sample menu items (unique & friendly)
+    const MENU = [
+      { id: 'm1', name: 'Margherita Pizza', desc: 'Classic cheese & basil', price: 249, tag: 'veg', emoji:'🍕' },
+      { id: 'm2', name: 'Pepperoni Blast', desc: 'Pepperoni & cheese', price: 329, tag: 'nonveg', emoji:'🍕' },
+      { id: 'm3', name: 'Paneer Butter Masala', desc: 'Creamy tomato gravy', price: 199, tag: 'veg', emoji:'🍛' },
+      { id: 'm4', name: 'Chicken Biryani', desc: 'Aromatic basmati rice', price: 279, tag: 'nonveg', emoji:'🍗' },
+      { id: 'm5', name: 'Veggie Burger', desc: 'Loaded with fresh veggies', price: 169, tag: 'veg', emoji:'🍔' },
+      { id: 'm6', name: 'Chocolate Lava Cake', desc: 'Molten center delight', price: 129, tag: 'dessert', emoji:'🍰' },
+      { id: 'm7', name: 'Coke (330ml)', desc: 'Chilled soft drink', price: 49, tag: 'drink', emoji:'🥤' }
+    ];
+
+    // DOM references
+    const menuGrid = document.getElementById('menuGrid');
+    const searchInput = document.getElementById('searchInput');
+    const filters = document.querySelectorAll('.chip[data-filter]');
+    const cartList = document.getElementById('cartList');
+    const cartCount = document.getElementById('cartCount');
+    const subtotalEl = document.getElementById('subtotal');
+    const deliveryFeeEl = document.getElementById('deliveryFee');
+    const taxesEl = document.getElementById('taxes');
+    const totalEl = document.getElementById('total');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalContent = document.getElementById('modalContent');
+    const clearCartBtn = document.getElementById('clear-cart-btn');
+    const viewOrdersBtn = document.getElementById('view-orders-btn');
+
+    // business values
+    const DELIVERY_FEE = 30;
+    const TAX_RATE = 0.05; // 5%
+
+    // cart persisted as array of {id, qty}
+    let cart = JSON.parse(localStorage.getItem('foodie_cart') || '[]');
+
+    // Orders history (simulate)
+    let orders = JSON.parse(localStorage.getItem('foodie_orders') || '[]');
+
+    // Render functions
+    function renderMenu(items){
+      menuGrid.innerHTML = '';
+      if(!items.length){
+        menuGrid.innerHTML = '<div class="empty">No items found</div>';
+        return;
+      }
+      items.forEach(item=>{
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <div class="thumb" aria-hidden="true">${item.emoji}</div>
+          <div class="meta">
+            <div class="name">${item.name}</div>
+            <div class="desc">${item.desc}</div>
+            <div class="price">₹${item.price}</div>
+            <div class="addrow">
+              <div class="qty">
+                <button class="qty-dec" data-id="${item.id}" aria-label="Decrease">−</button>
+                <div style="width:26px;text-align:center" class="qty-num" id="qty-${item.id}">1</div>
+                <button class="qty-inc" data-id="${item.id}" aria-label="Increase">+</button>
+              </div>
+              <button class="btn" data-add="${item.id}">Add</button>
+              <button class="btn secondary" data-details="${item.id}">Details</button>
+            </div>
+          </div>
+        `;
+        menuGrid.appendChild(div);
+      });
+    }
+
+    // initial render
+    renderMenu(MENU);
+
+    // simple quantity control per item
+    document.addEventListener('click', (e)=>{
+      const inc = e.target.closest('.qty-inc');
+      const dec = e.target.closest('.qty-dec');
+      if(inc || dec){
+        const id = (inc||dec).dataset.id;
+        const el = document.getElementById('qty-'+id);
+        let val = parseInt(el.textContent,10) || 1;
+        if(inc) val = Math.min(10, val+1);
+        if(dec) val = Math.max(1, val-1);
+        el.textContent = val;
+      }
+
+      // Add to cart
+      const addBtn = e.target.closest('[data-add]');
+      if(addBtn){
+        const id = addBtn.dataset.add;
+        const qty = parseInt(document.getElementById('qty-'+id).textContent,10) || 1;
+        addToCart(id, qty);
+      }
+
+      // details
+      const detailsBtn = e.target.closest('[data-details]');
+      if(detailsBtn){
+        const id = detailsBtn.dataset.details;
+        openDetails(id);
+      }
+    });
+
+    // filtering
+    filters.forEach(f=>{
+      f.addEventListener('click', ()=>{
+        filters.forEach(x=>x.classList.remove('active'));
+        f.classList.add('active');
+        const filter = f.dataset.filter;
+        applyFilters(filter, searchInput.value.trim());
+      });
+    });
+
+    // search with debounce
+    let debounceTimer;
+    searchInput.addEventListener('input', ()=>{
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(()=>{
+        const query = searchInput.value.trim();
+        const filterEl = document.querySelector('.chip.active');
+        const filter = filterEl ? filterEl.dataset.filter : 'all';
+        applyFilters(filter, query);
+      }, 180);
+    });
+
+    function applyFilters(filter, query){
+      let filtered = MENU.slice();
+      if(filter !== 'all'){
+        filtered = filtered.filter(i=>i.tag === filter);
+      }
+      if(query){
+        const q = query.toLowerCase();
+        filtered = filtered.filter(i=> i.name.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q));
+      }
+      renderMenu(filtered);
+    }
+
+    // Cart logic
+    function addToCart(id, qty=1){
+      const existing = cart.find(c=>c.id === id);
+      if(existing){
+        existing.qty = Math.min(20, existing.qty + qty);
+      } else {
+        cart.push({ id, qty });
+      }
+      saveCart();
+      renderCart();
+      toast('Added to cart');
+    }
+
+    function updateCartQty(id, qty){
+      const item = cart.find(c=>c.id === id);
+      if(item){
+        item.qty = qty;
+        if(item.qty <= 0) cart = cart.filter(c=>c.id !== id);
+        saveCart();
+        renderCart();
+      }
+    }
+
+    function removeFromCart(id){
+      cart = cart.filter(c=>c.id !== id);
+      saveCart();
+      renderCart();
+    }
+
+    function saveCart(){
+      localStorage.setItem('foodie_cart', JSON.stringify(cart));
+    }
+
+    function renderCart(){
+      cartList.innerHTML = '';
+      if(cart.length === 0){
+        cartList.innerHTML = '<div class="empty">Your cart is empty. Add delicious food!</div>';
+        cartCount.textContent = 0;
+        subtotalEl.textContent = '₹0';
+        taxesEl.textContent = '₹0';
+        totalEl.textContent = '₹0';
+        return;
+      }
+      cartCount.textContent = cart.reduce((s,i)=>s+i.qty,0);
+
+      let subtotal = 0;
+      cart.forEach(ci=>{
+        const menuItem = MENU.find(m=>m.id === ci.id);
+        if(!menuItem) return;
+        const lineTotal = menuItem.price * ci.qty;
+        subtotal += lineTotal;
+
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <div style="width:44px;height:44px;border-radius:8px;background:#081827;display:grid;place-items:center">${menuItem.emoji}</div>
+          <div style="flex:1">
+            <div class="name">${menuItem.name}</div>
+            <div class="small">₹${menuItem.price} × ${ci.qty} = ₹${lineTotal}</div>
+          </div>
+          <div class="cart-actions">
+            <button class="chip" data-dec="${ci.id}">−</button>
+            <div class="small" style="width:26px;text-align:center">${ci.qty}</div>
+            <button class="chip" data-inc="${ci.id}">+</button>
+            <button class="chip" data-remove="${ci.id}">🗑️</button>
+          </div>
+        `;
+        cartList.appendChild(div);
+      });
+
+      // wire up cart item buttons
+      cartList.querySelectorAll('[data-inc]').forEach(b=>{
+        b.addEventListener('click', ()=> {
+          const id = b.dataset.inc;
+          updateCartQty(id, (cart.find(c=>c.id===id).qty)+1);
+        });
+      });
+      cartList.querySelectorAll('[data-dec]').forEach(b=>{
+        b.addEventListener('click', ()=> {
+          const id = b.dataset.dec;
+          updateCartQty(id, (cart.find(c=>c.id===id).qty)-1);
+        });
+      });
+      cartList.querySelectorAll('[data-remove]').forEach(b=>{
+        b.addEventListener('click', ()=> {
+          const id = b.dataset.remove;
+          removeFromCart(id);
+        });
+      });
+
+      // totals
+      subtotalEl.textContent = `₹${subtotal}`;
+      const taxes = Math.round(subtotal * TAX_RATE);
+      taxesEl.textContent = `₹${taxes}`;
+      const total = subtotal + DELIVERY_FEE + taxes;
+      totalEl.textContent = `₹${total}`;
+    }
+
+    // events
+    checkoutBtn.addEventListener('click', openCheckout);
+    clearCartBtn.addEventListener('click', ()=>{
+      if(!confirm('Clear your cart?')) return;
+      cart = [];
+      saveCart();
+      renderCart();
+    });
+    viewOrdersBtn.addEventListener('click', showOrders);
+
+    // initial cart render
+    renderCart();
+
+    // Details modal
+    function openDetails(id){
+      const item = MENU.find(m=>m.id===id);
+      if(!item) return;
+      modalContent.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2 style="margin:0">${item.name}</h2>
+            <div class="muted" style="margin-top:6px">${item.desc}</div>
+          </div>
+          <div style="font-size:36px">${item.emoji}</div>
+        </div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="font-weight:700;font-size:18px">₹${item.price}</div>
+          <button class="btn" id="modalAddBtn">Add to Cart</button>
+        </div>
+        <div style="margin-top:12px"><button class="chip" id="closeModal">Close</button></div>
+      `;
+      openModal();
+      document.getElementById('modalAddBtn').addEventListener('click', ()=>{
+        addToCart(id,1);
+        closeModal();
+      });
+      document.getElementById('closeModal').addEventListener('click', closeModal);
+    }
+
+    // modal helpers
+    function openModal(){
+      modalBackdrop.style.display = 'flex';
+      modalBackdrop.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){
+      modalBackdrop.style.display = 'none';
+      modalBackdrop.setAttribute('aria-hidden','true');
+    }
+    modalBackdrop.addEventListener('click', (e)=>{
+      if(e.target === modalBackdrop) closeModal();
+    });
+
+    // Checkout modal with form validation
+    function openCheckout(){
+      if(!cart.length){
+        alert('Your cart is empty. Add something tasty first!');
+        return;
+      }
+      const subtotal = parseInt(subtotalEl.textContent.replace('₹','')) || 0;
+      const taxes = Math.round(subtotal * TAX_RATE);
+      const total = subtotal + DELIVERY_FEE + taxes;
+
+      modalContent.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 style="margin:0">Checkout</h2>
+          <button class="chip" id="closeCheckout">✖</button>
+        </div>
+        <div class="two-col" style="margin-top:12px">
+          <div>
+            <label for="name">Full name</label>
+            <input id="name" type="text" placeholder="Your name" />
+            <label for="phone" style="margin-top:8px">Phone</label>
+            <input id="phone" type="tel" placeholder="+91 99999 99999" />
+            <label for="address" style="margin-top:8px">Delivery address</label>
+            <input id="address" type="text" placeholder="House, Street, Landmark" />
+            <label for="notes" style="margin-top:8px">Notes (optional)</label>
+            <input id="notes" type="text" placeholder="No onions, please..." />
+            <div style="margin-top:12px">
+              <button class="btn" id="payBtn">Simulate Payment (₹${total})</button>
+            </div>
+          </div>
+
+          <aside style="background:rgba(255,255,255,0.02);padding:12px;border-radius:8px">
+            <h3 style="margin:0 0 8px 0">Order Summary</h3>
+            <div id="checkoutItems" style="max-height:260px;overflow:auto"></div>
+            <hr style="margin:8px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+            <div class="summary-row"><span>Subtotal</span><span>₹${subtotal}</span></div>
+            <div class="summary-row"><span>Delivery</span><span>₹${DELIVERY_FEE}</span></div>
+            <div class="summary-row"><span>Taxes</span><span>₹${taxes}</span></div>
+            <div class="summary-row" style="font-weight:800;font-size:18px"><span>Total</span><span>₹${total}</span></div>
+          </aside>
+        </div>
+      `;
+
+      // populate checkout items
+      const ciEl = document.getElementById('checkoutItems');
+      cart.forEach(ci=>{
+        const menuItem = MENU.find(m=>m.id===ci.id);
+        ciEl.innerHTML += `<div style="display:flex;justify-content:space-between;margin-bottom:6px">${menuItem.name} × ${ci.qty} <strong>₹${menuItem.price * ci.qty}</strong></div>`;
+      });
+
+      openModal();
+      document.getElementById('closeCheckout').addEventListener('click', closeModal);
+      document.getElementById('payBtn').addEventListener('click', handlePayment);
+    }
+
+    // handle payment simulation & order creation
+    function handlePayment(){
+      // basic validation
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+
+      if(!name || !phone || !address){
+        alert('Please fill name, phone and address to proceed.');
+        return;
+      }
+
+      // simulate payment processing
+      const payBtn = document.getElementById('payBtn');
+      payBtn.disabled = true;
+      payBtn.textContent = 'Processing...';
+
+      setTimeout(()=>{
+        // create order
+        const orderId = 'ORD' + Date.now().toString().slice(-6);
+        const subtotal = parseInt(subtotalEl.textContent.replace('₹','')) || 0;
+        const taxes = Math.round(subtotal * TAX_RATE);
+        const total = subtotal + DELIVERY_FEE + taxes;
+
+        const order = {
+          id: orderId,
+          items: cart.map(c=> ({ ...c} )),
+          subtotal, taxes, total, address, name, phone,
+          statusIndex: 0, // 0: accepted, 1:preparing, 2:out for delivery, 3:delivered
+          createdAt: Date.now()
+        };
+        orders.push(order);
+        localStorage.setItem('foodie_orders', JSON.stringify(orders));
+
+        // clear cart
+        cart = [];
+        saveCart();
+        renderCart();
+
+        // show tracking UI
+        showOrderTracking(order);
+      }, 1100);
+    }
+
+    // order tracking UI
+    function showOrderTracking(order){
+      modalContent.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 style="margin:0">Order #${order.id}</h2>
+          <button class="chip" id="closeTrack">Close</button>
+        </div>
+        <p class="muted" style="margin-top:6px">Delivering to: ${order.address}</p>
+        <div style="margin-top:12px" class="order-tracking">
+          <div class="step"><div class="dot" id="dot-0"></div><div>Order accepted</div></div>
+          <div class="step"><div class="dot" id="dot-1"></div><div>Preparing your food</div></div>
+          <div class="step"><div class="dot" id="dot-2"></div><div>Out for delivery</div></div>
+          <div class="step"><div class="dot" id="dot-3"></div><div>Delivered</div></div>
+
+          <div style="margin-top:10px">
+            <div class="tracking-bar"><div class="tracking-fill" id="trackingFill"></div></div>
+            <div style="margin-top:8px" class="status-text" id="statusText">Order accepted</div>
+            <div class="muted" style="font-size:13px;margin-top:6px">ETA: <span id="eta">~ 30 mins</span></div>
+          </div>
+        </div>
+      `;
+      openModal();
+      document.getElementById('closeTrack').addEventListener('click', closeModal);
+
+      // animate status
+      simulateOrderProgress(order);
+    }
+
+    function simulateOrderProgress(order){
+      // reset
+      const steps = 4;
+      let idx = 0;
+      const dots = [];
+      for(let i=0;i<steps;i++){
+        const d = document.getElementById('dot-'+i);
+        if(d) dots.push(d);
+      }
+      const fill = document.getElementById('trackingFill');
+      const stat = document.getElementById('statusText');
+      const eta = document.getElementById('eta');
+
+      function advance(){
+        if(idx >= steps) return;
+        dots[idx]?.classList.add('active');
+        const pct = ((idx+1)/steps) * 100;
+        if(fill) fill.style.width = pct + '%';
+
+        const labels = ['Order accepted','Preparing your food','Out for delivery','Delivered'];
+        stat.textContent = labels[idx];
+        // approximate ETA
+        const etas = ['~30 mins','~20 mins','~10 mins','Arriving now'];
+        eta.textContent = etas[idx];
+
+        // update order status in storage
+        const stored = JSON.parse(localStorage.getItem('foodie_orders')||'[]');
+        const find = stored.find(o=>o.id===order.id);
+        if(find){ find.statusIndex = idx; localStorage.setItem('foodie_orders', JSON.stringify(stored)); }
+
+        idx++;
+        if(idx < steps) setTimeout(advance, 3000 + Math.random()*2000); // randomize a bit
+      }
+      advance();
+    }
+
+    // Orders list modal
+    function showOrders(){
+      const stored = JSON.parse(localStorage.getItem('foodie_orders') || '[]');
+      if(!stored.length){
+        modalContent.innerHTML = `<div class="empty">No past orders yet. Start ordering!</div>`;
+        openModal();
+        return;
+      }
+      modalContent.innerHTML = `<h3>My Orders</h3><div style="margin-top:8px" id="ordersList"></div><div style="margin-top:12px"><button class="chip" id="closeOrders">Close</button></div>`;
+      const ordersList = document.getElementById('ordersList');
+      stored.slice().reverse().forEach(o=>{
+        const div = document.createElement('div');
+        div.style.padding = '8px';
+        div.style.marginBottom = '8px';
+        div.style.borderRadius = '8px';
+        div.style.background = 'rgba(255,255,255,0.02)';
+        div.innerHTML = `<div style="display:flex;justify-content:space-between"><strong>${o.id}</strong><span class="muted">${new Date(o.createdAt).toLocaleString()}</span></div>
+                         <div class="muted" style="margin-top:6px">Total: ₹${o.total}</div>
+                         <div style="margin-top:6px"><button class="chip" data-track="${o.id}">Track</button></div>`;
+        ordersList.appendChild(div);
+      });
+      openModal();
+      document.getElementById('closeOrders').addEventListener('click', closeModal);
+      ordersList.querySelectorAll('[data-track]').forEach(b=>{
+        b.addEventListener('click', ()=> {
+          const id = b.dataset.track;
+          const order = (JSON.parse(localStorage.getItem('foodie_orders')||'[]')).find(x=>x.id===id);
+          if(order) showOrderTracking(order);
+        });
+      });
+    }
+
+    // small toast
+    function toast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position='fixed';
+      t.style.left='50%';
+      t.style.transform='translateX(-50%)';
+      t.style.bottom='40px';
+      t.style.background='rgba(0,0,0,0.6)';
+      t.style.padding='10px 14px';
+      t.style.borderRadius='10px';
+      document.body.appendChild(t);
+      setTimeout(()=> t.style.opacity='0',1500);
+      setTimeout(()=> document.body.removeChild(t),2200);
+    }
+
+    // initial order & cart load done at top
+  </script>
+</body>
+</html>
